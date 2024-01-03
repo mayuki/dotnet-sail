@@ -1,0 +1,1 @@
+﻿await Sail.SailBootstrapper.RunAsync(args);
