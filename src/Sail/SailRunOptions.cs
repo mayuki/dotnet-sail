@@ -11,9 +11,11 @@ public record SailRunOptions(
     // DOTNET_SAIL_SOURCE
     string? Source,
     // DOTNET_SAIL_CONFIGURATION
-    string Configuration,
+    string? Configuration,
     // DOTNET_SAIL_LAUNCH_PROFILE
     string? LaunchProfile,
+    // DOTNET_SAIL_NO_LAUNCH_PROFILE
+    bool? NoLaunchProfile,
     // DOTNET_SAIL_ARGUMENTS
     string[]? Arguments,
     // DOTNET_SAIL_ENV_*
@@ -32,12 +34,13 @@ public record SailRunOptions(
         Runner: nameof(DotNetRunRunner),
         ExecName: null,
         Source: null,
-        Configuration: "Release",
+        Configuration: null,
         LaunchProfile: null,
+        NoLaunchProfile: null,
         Arguments: null,
         EnvironmentVariables: new Dictionary<string, string>(),
         Sdk: "Microsoft.NET.Sdk",
-        TargetFramework: "net7.0",
+        TargetFramework: "net8.0",
         Verbosity: LogLevel.Information
     );
 
@@ -57,6 +60,7 @@ public record SailRunOptions(
             Source = dictionary.GetValueOrDefault($"{Prefix}SOURCE", options.Source),
             Configuration = dictionary.GetValueOrDefault($"{Prefix}CONFIGURATION", options.Configuration)!,
             LaunchProfile = dictionary.GetValueOrDefault($"{Prefix}LAUNCH_PROFILE", options.LaunchProfile)!,
+            NoLaunchProfile = ParseBoolean(dictionary.GetValueOrDefault($"{Prefix}NO_LAUNCH_PROFILE")) ?? options.NoLaunchProfile,
             Arguments = dictionary.GetValueOrDefault($"{Prefix}ARGUMENTS")?.Split(' ') ?? options.Arguments,
             Sdk = dictionary.GetValueOrDefault($"{Prefix}SDK", options.Sdk),
             TargetFramework = dictionary.GetValueOrDefault($"{Prefix}TARGET_FRAMEWORK", options.TargetFramework),
@@ -110,6 +114,9 @@ public record SailRunOptions(
                         case "--launch-profile":
                             options = options with { LaunchProfile = optionValue };
                             break;
+                        case "--no-launch-profile":
+                            options = options with { NoLaunchProfile = true };
+                            break;
                         case "-s":
                         case "--source":
                             source = optionValue;
@@ -153,6 +160,13 @@ public record SailRunOptions(
         };
 
         return options;
+    }
+
+    public static bool? ParseBoolean(string? value)
+    {
+        return value?.ToLowerInvariant() is { } strValue
+            ? strValue.StartsWith("1") || strValue.StartsWith("t")
+            : null;
     }
 
     public static LogLevel? ParseLogLevel(string? value)

@@ -40,10 +40,16 @@ public class DotNetRunRunner : IProjectRunner
 
     public async Task<int> RunAsync(BootstrapContext context, ISourceProject project)
     {
-        string[] buildArgs = [project.ProjectPath, "--configuration", context.Options.Configuration];
+        string[] buildArgs = [project.ProjectPath];
+
+        if (context.Options.Configuration is not null)
+        {
+            buildArgs = [.. buildArgs, "--configuration", context.Options.Configuration];
+        }
+
         context.Logger.Information($"Run dotnet: dotnet build {string.Join(' ', buildArgs)}");
         {
-            var procStartInfo = new ProcessStartInfo("dotnet", ["build", ..buildArgs]);
+            var procStartInfo = new ProcessStartInfo("dotnet", ["build", .. buildArgs]);
             using var proc = Process.Start(procStartInfo) ?? throw new SailExecutionException($"Failed to launch a dotnet process."); ;
             await proc.WaitForExitAsync();
             if (proc.ExitCode != 0)
@@ -69,19 +75,20 @@ public class DotNetRunRunner : IProjectRunner
 
     private static IReadOnlyList<string> CreateDotNetRunArguments(BootstrapContext context, ISourceProject project)
     {
-        IEnumerable<string> args = ["--no-build", "--project", project.ProjectPath, "--configuration", context.Options.Configuration];
+        string[] args = ["--no-build", "--project", project.ProjectPath];
+
         if (context.Options.LaunchProfile is not null)
         {
-            args = [..args, "--launch-profile", context.Options.LaunchProfile];
+            args = [.. args, "--launch-profile", context.Options.LaunchProfile];
         }
-        else
+        else if (context.Options.NoLaunchProfile ?? false)
         {
-            args = [..args, "--no-launch-profile"];
+            args = [.. args, "--no-launch-profile"];
         }
 
         if (context.Options.Arguments is not null)
         {
-            args = [..args, ..context.Options.Arguments];
+            args = [.. args, .. context.Options.Arguments];
         }
 
         return args.ToArray();
@@ -94,10 +101,16 @@ public class DotNetPublishAndExecRunner : IProjectRunner
 
     public async Task<int> RunAsync(BootstrapContext context, ISourceProject project)
     {
-        string[] publishArgs = [project.ProjectPath, "--output", context.Workspace.ArtifactsDirectory, "--configuration", context.Options.Configuration];
+        string[] publishArgs = [project.ProjectPath, "--output", context.Workspace.ArtifactsDirectory];
+
+        if (context.Options.Configuration is not null)
+        {
+            publishArgs = [.. publishArgs, "--configuration", context.Options.Configuration];
+        }
+
         context.Logger.Information($"Run dotnet: dotnet publish {string.Join(' ', publishArgs)}");
         {
-            var procStartInfo = new ProcessStartInfo("dotnet", ["publish", ..publishArgs]);
+            var procStartInfo = new ProcessStartInfo("dotnet", ["publish", .. publishArgs]);
             using var proc = Process.Start(procStartInfo) ?? throw new SailExecutionException($"Failed to launch a dotnet process."); ;
             await proc.WaitForExitAsync();
             if (proc.ExitCode != 0)
@@ -107,10 +120,10 @@ public class DotNetPublishAndExecRunner : IProjectRunner
         }
 
         var entryAssemblyName = context.Options.ExecName ?? Path.GetFileNameWithoutExtension(project.ProjectPath) + ".dll";
-        string[] execArgs = [Path.Combine(context.Workspace.ArtifactsDirectory, entryAssemblyName), ..(context.Options.Arguments ?? Array.Empty<string>())];
+        string[] execArgs = [Path.Combine(context.Workspace.ArtifactsDirectory, entryAssemblyName), .. (context.Options.Arguments ?? Array.Empty<string>())];
         context.Logger.Information($"Run dotnet: dotnet exec {string.Join(' ', execArgs)}");
         {
-            var procStartInfo = new ProcessStartInfo("dotnet", ["exec", ..execArgs])
+            var procStartInfo = new ProcessStartInfo("dotnet", ["exec", .. execArgs])
             {
                 // Change the current directory to the directory for artifacts.
                 WorkingDirectory = context.Workspace.ArtifactsDirectory,

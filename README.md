@@ -67,10 +67,11 @@ docker run --rm -it -p 8080:8080 -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Developme
 |DOTNET_SAIL_SOURCE|`-s`, `--source`|Gist, GitHub, or any other address that provides source code. (https://, git://...) Can be used instead of passing it as an argument.|
 |DOTNET_SAIL_ARGUMENTS||The arguments to be passed to the application.|
 |DOTNET_SAIL_VERBOSITY|`-v`, `--verbosity`|Set the verbosity level. The default is 'Information'. Allowed values are `None`, `Error`, `Information` and `Trace`.|
-|DOTNET_SAIL_RUNNER|`-r`, `--runner`|The strategy to run for. The default is 'DotNetRunRunner'. Available runners are `run`, `publish`.|
-|DOTNET_SAIL_CONFIGURATION|`-c`, `--configuration`|The configuration to run for. The default is 'Release'.|
-|DOTNET_SAIL_LAUNCH_PROFILE|`--launch-profile`|The name of the launch profile when the application launching with 'dotnet run' (DotNetRunRunner). The default is same as `--no-launch-profile`.|
-|DOTNET_SAIL_EXEC_NAME|`--exec-name`|The name of the entrypoint assembly when the application launching with 'dotnet exec' (DotNetPublishAndExecRunner).|
+|DOTNET_SAIL_RUNNER|`-r`, `--runner`|The strategy to run for. The default is 'DotNetRunRunner'. <br>Available runners are: <br><ul><li>`DotNetRunRunner`, `run`: Use 'dotnet build' and 'dotnet run'</li><li>`DotNetPublishAndExecRunner`, `publish`: Use 'dotnet publish' and 'dotnet exec'.</li></ul>|
+|DOTNET_SAIL_CONFIGURATION|`-c`, `--configuration`|The configuration to run for.|
+|DOTNET_SAIL_LAUNCH_PROFILE|`--launch-profile`|The name of the launch profile to use when launching the application. This option is available with 'dotnet run' (DotNetRunRunner).|
+|DOTNET_SAIL_NO_LAUNCH_PROFILE|`--no-launch-profile`|Do not attempt to use launchSettings.json to configure the application. This option is available with 'dotnet run' (DotNetRunRunner).|
+|DOTNET_SAIL_EXEC_NAME|`--exec-name`|The name of the entrypoint assembly. This option is available with 'dotnet publish' and 'dotnet exec' (DotNetPublishAndExecRunner).|
 |DOTNET_SAIL_SDK|`--sdk`|The SDK to run for single C# source project. The default is 'Microsoft.NET.Sdk'.|
 |DOTNET_SAIL_TARGET_FRAMEWORK|`--target-framework`|The target framework to run for single C# source project. The default is 'net8.0'.|
 |DOTNET_SAIL_ENV_*|`-e`, `--env`|The environment variables for the application to be run.|

@@ -1,0 +1,31 @@
+{
+  "profiles": {
+    "Sail (Empty/Help)": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
+    "Sail (Gist)": {
+      "commandName": "Project",
+      "commandLineArgs": "https://gist.github.com/d052d7457a63f25763ce8ecf04b1d0fc.git",
+      "environmentVariables": {
+        "DOTNET_SAIL_SDK": "Microsoft.NET.Sdk.Web",
+        "DOTNET_SAIL_VERBOSITY": "i"
+      }
+    },
+    "Sail (Gist/Arguments)": {
+      "commandName": "Project",
+      "commandLineArgs": "https://gist.github.com/mayuki/e42813678fcd04939b9205c18e6ab609 Alice"
+    },
+    "Sail (GitHub)": {
+      "commandName": "Project",
+      "commandLineArgs": "https://github.com/Cysharp/MagicOnion/tree/fd5c14fb2fad8c5596a21836c00b33b6bde7a7e3/samples/JwtAuthentication/JwtAuthApp.Server"
+    },
+    "Sail (GitHub/PublishAndExec)": {
+      "commandName": "Project",
+      "commandLineArgs": "https://github.com/dotnet/blazor-samples/tree/main/8.0/BlazorSample_BlazorWebApp",
+      "environmentVariables": {
+        "DOTNET_SAIL_RUNNER": "publish"
+      }
+    }
+  }
+}

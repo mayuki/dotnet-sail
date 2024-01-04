@@ -55,14 +55,21 @@ internal static class SailBootstrapper
                -v, --verbosity <value>        Set the verbosity level. The default is '{SailRunOptions.Default.Verbosity}'.
                                               Allowed values are `None`, `Error`, `Information` and `Trace`.
                                               Environment variable `DOTNET_SAIL_VERBOSITY`.
-               -r, --runner <value>           The strategy to run for. The default is '{SailRunOptions.Default.Runner}'. Available runners are `run`, `publish`.
+               -r, --runner <value>           The strategy to run for. The default is '{SailRunOptions.Default.Runner}'.
+                                              Available runners are:
+                                                - DotNetRunRunner, run: Use `dotnet build` and `dotnet run`
+                                                - DotNetPublishAndExecRunner, publish: Use `dotnet publish` and `dotnet exec`
                                               Environment variable `DOTNET_SAIL_RUNNER`.
-               -c, --configuration <value>    The configuration to run for. The default is '{SailRunOptions.Default.Configuration}'.
+               -c, --configuration <value>    The configuration to run for.
                                               Environment variable `DOTNET_SAIL_CONFIGURATION`.
-               --launch-profile <value>       The name of the launch profile when the application launching with 'dotnet run' (DotNetRunRunner).
-                                              The default is same as `--no-launch-profile`.
+               --launch-profile <value>       The name of the launch profile to use when launching the application.
+                                              This option is available with 'dotnet run' ({nameof(DotNetRunRunner)}).
                                               Environment variable `DOTNET_SAIL_LAUNCH_PROFILE`.
-               --exec-name <value>            The name of the entrypoint assembly when the application launching with 'dotnet exec' (DotNetPublishAndExecRunner).
+               --no-launch-profile            Do not attempt to use launchSettings.json to configure the application.
+                                              This option is available with 'dotnet run' ({nameof(DotNetRunRunner)}).
+                                              Environment variable `DOTNET_SAIL_NO_LAUNCH_PROFILE`.
+               --exec-name <value>            The name of the entrypoint assembly.
+                                              This option is available with 'dotnet publish' and 'dotnet exec' ({nameof(DotNetPublishAndExecRunner)}).
                                               Environment variable `DOTNET_SAIL_EXEC_NAME`.
                --sdk <value>                  The SDK to run for single C# source project. The default is '{SailRunOptions.Default.Sdk}'.
                                               Environment variable `DOTNET_SAIL_SDK`.

@@ -327,4 +327,20 @@ public class SailRunOptionsTest
         Assert.NotEqual(SailRunOptions.Default, options);
         Assert.Equal(optionValue, options.LaunchProfile);
     }
+
+    [Theory]
+    [InlineData("--no-launch-profile", true)]
+    public void UpdateFromCommandLineArgument_Options_NoLaunchProfile(string optionName, bool optionValue)
+    {
+        // Arrange
+        string[] args = [optionName];
+        var options = SailRunOptions.Default;
+
+        // Act
+        options = SailRunOptions.UpdateFromCommandLineArguments(options, args);
+
+        // Assert
+        Assert.NotEqual(SailRunOptions.Default, options);
+        Assert.Equal(optionValue, options.NoLaunchProfile);
+    }
 }
