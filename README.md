@@ -7,7 +7,7 @@ This container image performs **Download** (`git clone` or HTTP), **Build** (`do
 > dotnet-sail is primarily intended for temporary execution such as development, validation, and running sample code, and is not meant for use in production environments or the inner loop of day-to-day development.
 
 
-## Example: Run ASP.NET Core app from Gist
+## Example: Run [ASP.NET Core app from Gist](https://gist.github.com/mayuki/6779e703c81333457aef4a3271d6d5c5)
 ```
 docker run --rm -it -p 8080:8080 mayuki/dotnet-sail https://gist.github.com/mayuki/6779e703c81333457aef4a3271d6d5c5
 ```
@@ -30,14 +30,14 @@ The container images are available from the following container registries:
 
 ### Run from Gist
 ```
-docker run --rm -it ghcr.io/mayuki/dotnet-sail https://gist.github.com/mayuki/d052d7457a63f25763ce8ecf04b1d0fc
+docker run --rm -it mayuki/dotnet-sail https://gist.github.com/mayuki/d052d7457a63f25763ce8ecf04b1d0fc
 ```
 
 If the Gist contains only one C# file, it automatically generates a C# project and starts it. If the Gist includes a .csproj file, it uses that to start the project.
 
 ### Run from GitHub
 ```
-docker run --rm -it -p 8080:8080 -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Development dotnet-sail https://github.com/dotnet/blazor-samples/tree/main/8.0/BlazorSample_BlazorWebApp
+docker run --rm -it -p 8080:8080 -e mayuki/dotnet-sail https://github.com/mayuki/dotnet-sail/tree/main/samples/SampleWebApp/SampleWebApp.csproj
 ```
 
 #### Allowed URL forms
@@ -48,11 +48,7 @@ docker run --rm -it -p 8080:8080 -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Developme
 
 ### Run from Git
 ```
-# Git: https://github.com/dotnet/blazor-samples.git
-# Branch: main
-# Path: 8.0/BlazorSample_BlazorWebApp
-
-docker run --rm -it -p 8080:8080 -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Development dotnet-sail https://github.com/dotnet/blazor-samples.git?path=main/8.0/BlazorSample_BlazorWebApp&branch=main
+docker run --rm -it -p 8080:8080 mayuki/dotnet-sail https://github.com/mayuki/dotnet-sail.git?path=samples/SampleWebApp/SampleWebApp.csproj&branch=main
 ```
 
 #### Options
@@ -94,12 +90,16 @@ Also, at this point, there is no provided method for configuring authentication 
 |DOTNET_SAIL_ENV_*|`-e`, `--env`|The environment variables for the application to be run.|
 
 ```
-docker run --rm -it dotnet-sail -e DOTNET_ENVIRONMENT=Production https://example.com/repo.git arg1 arg2
+docker run --rm -it mayuki/dotnet-sail -e DOTNET_ENVIRONMENT=Production -r publish https://example.com/repo.git arg1 arg2
 ```
 
 It is also possible to pass settings through environment variables of the container.
 ```
-docker run --rm -it -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Production -e DOTNET_SAIL_SOURCE=https://example.com/repo.git dotnet-sail
+docker run --rm -it -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Production \
+                    -e DOTNET_SAIL_SOURCE=https://example.com/repo.git \
+                    -e DOTNET_SAIL_RUNNER=publish \
+                    -e DOTNET_SAIL_ARGUMENTS="arg1 arg2" \
+                    mayuki/dotnet-sail
 ```
 
 ## License
