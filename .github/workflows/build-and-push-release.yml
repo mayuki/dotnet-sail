@@ -38,8 +38,8 @@ jobs:
         with:
           tags: type=semver,pattern={{major}}.{{minor}}
           images: |
-            mayuki/${{ env.IMAGE_NAME }}
-            ghcr.io/mayuki/${{ env.IMAGE_NAME }}
+            ${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
