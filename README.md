@@ -1,11 +1,10 @@
 # ⛵ dotnet-sail
-Run .NET project source code hosted on Gist, GitHub, Git or the web directly in a container easily and instantly. No CI or container registry required.
+Downloads .NET project from Gist, GitHub, Git, or the web and runs it in a container. No CI or container registry required.
 
 This container image performs **Download** (`git clone` or HTTP), **Build** (`dotnet build`), and **Run** (`dotnet run`) all at once, simply by specifying the source code address.
 
 > [!IMPORTANT]
 > dotnet-sail is primarily intended for temporary execution such as development, validation, and running sample code, and is not meant for use in production environments or the inner loop of day-to-day development.
-
 
 ## Example: Run [ASP.NET Core app from Gist](https://gist.github.com/mayuki/6779e703c81333457aef4a3271d6d5c5)
 ```
