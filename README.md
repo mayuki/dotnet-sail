@@ -54,6 +54,7 @@ docker run --rm -it -p 8080:8080 mayuki/dotnet-sail https://github.com/mayuki/do
 - `path`: The path of the directory or file that includes projects and sources within the repository.
 - `branch`: The branch to checkout when cloning the repository.
 
+
 ## What does this do to help?
 
 - Running temporary verification project
@@ -100,6 +101,20 @@ docker run --rm -it -e DOTNET_SAIL_ENV_DOTNET_ENVIRONMENT=Production \
                     -e DOTNET_SAIL_ARGUMENTS="arg1 arg2" \
                     mayuki/dotnet-sail
 ```
+
+## Run in cloud services
+### Azure Container Instance
+In ACI, containers can easily be launched by specifying the container image and setting environment variables. The screenshot below is an example of running a Blazor sample application.
+
+![](docs/images/screen-aci-01.png)
+![](docs/images/screen-aci-02.png)
+
+- Image source: Other registry
+- Image: mayuki/dotnet-sail
+- Environment variables:
+    - `DOTNET_URLS`: http://+:80
+    - `DOTNET_SAIL_SOURCE`: https://github.com/dotnet/blazor-samples/tree/main/8.0/BlazorSample_BlazorWebApp
+    - `DOTNET_SAIL_RUNNER`: publish
 
 ## License
 MIT License
