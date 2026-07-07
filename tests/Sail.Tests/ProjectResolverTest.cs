@@ -26,28 +26,12 @@ public class ProjectResolverTest
 
         Assert.True(result);
         Assert.Single(projects);
-        Assert.IsType<SingleCSharpSourceProject>(projects[0]);
-        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "App.csproj")),  Path.GetFullPath(projects[0].ProjectPath));
+        Assert.IsType<FileBasedCSharpSourceProject>(projects[0]);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "Program.cs")), Path.GetFullPath(projects[0].ProjectPath));
     }
 
     [Fact]
-    public void CsFile_Multiple()
-    {
-        var targetPath = default(string);
-        using var tempDir = new TemporaryDirectory();
-        tempDir.AddFile("Program.cs", "");
-        tempDir.AddFile("Class1.cs", "");
-
-        var result = ProjectResolver.TryFindProjects(tempDir.DirectoryPath, targetPath, out var projects);
-
-        Assert.True(result);
-        Assert.Single(projects);
-        Assert.IsType<SingleCSharpSourceProject>(projects[0]);
-        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "App.csproj")),  Path.GetFullPath(projects[0].ProjectPath));
-    }
-    
-    [Fact]
-    public void CsFile_With_TargetPath()
+    public void CsFile_ExplicitNestedTarget()
     {
         var targetPath = "ConsoleApp1/Program.cs";
         using var tempDir = new TemporaryDirectory();
@@ -59,8 +43,58 @@ public class ProjectResolverTest
 
         Assert.True(result);
         Assert.Single(projects);
-        Assert.IsType<SingleCSharpSourceProject>(projects[0]);
-        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "ConsoleApp1/App.csproj")),  Path.GetFullPath(projects[0].ProjectPath));
+        Assert.IsType<FileBasedCSharpSourceProject>(projects[0]);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "ConsoleApp1/Program.cs")), Path.GetFullPath(projects[0].ProjectPath));
+    }
+
+    [Fact]
+    public void CsFile_ExplicitTarget_With_CsProj_Present()
+    {
+        // An explicitly targeted .cs file remains a file-based application even if a
+        // sibling .csproj exists in the same directory.
+        var targetPath = "Program.cs";
+        using var tempDir = new TemporaryDirectory();
+        tempDir.AddFile("Program.cs", "");
+        tempDir.AddFile("ConsoleApp1.csproj", "");
+
+        var result = ProjectResolver.TryFindProjects(tempDir.DirectoryPath, targetPath, out var projects);
+
+        Assert.True(result);
+        Assert.Single(projects);
+        Assert.IsType<FileBasedCSharpSourceProject>(projects[0]);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "Program.cs")), Path.GetFullPath(projects[0].ProjectPath));
+    }
+
+    [Fact]
+    public void CsFile_Multiple_WithProgramCs()
+    {
+        var targetPath = default(string);
+        using var tempDir = new TemporaryDirectory();
+        tempDir.AddFile("Program.cs", "");
+        tempDir.AddFile("Class1.cs", "");
+
+        var result = ProjectResolver.TryFindProjects(tempDir.DirectoryPath, targetPath, out var projects);
+
+        Assert.True(result);
+        Assert.Single(projects);
+        Assert.IsType<GeneratedCSharpProjectProject>(projects[0]);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "App.csproj")), Path.GetFullPath(projects[0].ProjectPath));
+    }
+
+    [Fact]
+    public void CsFile_Multiple_WithoutProgramCs()
+    {
+        var targetPath = default(string);
+        using var tempDir = new TemporaryDirectory();
+        tempDir.AddFile("Class1.cs", "");
+        tempDir.AddFile("Class2.cs", "");
+
+        var result = ProjectResolver.TryFindProjects(tempDir.DirectoryPath, targetPath, out var projects);
+
+        Assert.True(result);
+        Assert.Single(projects);
+        Assert.IsType<GeneratedCSharpProjectProject>(projects[0]);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "App.csproj")), Path.GetFullPath(projects[0].ProjectPath));
     }
 
     [Fact]

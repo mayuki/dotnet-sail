@@ -85,9 +85,10 @@ Also, at this point, there is no provided method for configuring authentication 
 |DOTNET_SAIL_LAUNCH_PROFILE|`--launch-profile`|The name of the launch profile to use when launching the application. This option is available with 'dotnet run' (DotNetRunRunner).|
 |DOTNET_SAIL_NO_LAUNCH_PROFILE|`--no-launch-profile`|Do not attempt to use launchSettings.json to configure the application. This option is available with 'dotnet run' (DotNetRunRunner).|
 |DOTNET_SAIL_EXEC_NAME|`--exec-name`|The name of the entrypoint assembly. This option is available with 'dotnet publish' and 'dotnet exec' (DotNetPublishAndExecRunner).|
-|DOTNET_SAIL_SDK|`--sdk`|The SDK to run for single C# source project. The default is 'Microsoft.NET.Sdk'.|
-|DOTNET_SAIL_TARGET_FRAMEWORK|`--target-framework`|The target framework to run for single C# source project. The default is 'net8.0'.|
 |DOTNET_SAIL_ENV_*|`-e`, `--env`|The environment variables for the application to be run.|
+
+> [!NOTE]
+> `--sdk`/`DOTNET_SAIL_SDK` and `--target-framework`/`DOTNET_SAIL_TARGET_FRAMEWORK` have been removed. A single `.cs` file now runs as a native .NET file-based application; use standard source directives instead (e.g. `#:sdk Microsoft.NET.Sdk.Web`, `#:property TargetFramework=net8.0`).
 
 ```
 docker run --rm -it mayuki/dotnet-sail -e DOTNET_ENVIRONMENT=Production -r publish https://example.com/repo.git arg1 arg2
