@@ -40,13 +40,7 @@ public class DotNetRunRunner : IProjectRunner
 
     public async Task<int> RunAsync(BootstrapContext context, ISourceProject project)
     {
-        string[] buildArgs = [project.ProjectPath];
-
-        if (context.Options.Configuration is not null)
-        {
-            buildArgs = [.. buildArgs, "--configuration", context.Options.Configuration];
-        }
-
+        var buildArgs = CreateDotNetBuildArguments(context.Options, project);
         context.Logger.Information($"Run dotnet: dotnet build {string.Join(' ', buildArgs)}");
         {
             var procStartInfo = new ProcessStartInfo("dotnet", ["build", .. buildArgs]);
@@ -58,7 +52,7 @@ public class DotNetRunRunner : IProjectRunner
             }
         }
 
-        var args = CreateDotNetRunArguments(context, project);
+        var args = CreateDotNetRunArguments(context.Options, project);
         context.Logger.Information($"Run dotnet: dotnet run {string.Join(' ', args)}");
         {
             var procStartInfo = new ProcessStartInfo("dotnet", ["run", .. args]);
@@ -73,25 +67,51 @@ public class DotNetRunRunner : IProjectRunner
         }
     }
 
-    private static IReadOnlyList<string> CreateDotNetRunArguments(BootstrapContext context, ISourceProject project)
+    // `dotnet build <path-to-project-or-file> [--configuration <c>]`. The same shape works for
+    // a conventional/generated project (.csproj) and a native file-based application (.cs).
+    public static IReadOnlyList<string> CreateDotNetBuildArguments(SailRunOptions options, ISourceProject project)
     {
-        string[] args = ["--no-build", "--project", project.ProjectPath];
+        string[] args = [project.ProjectPath];
 
-        if (context.Options.LaunchProfile is not null)
+        if (options.Configuration is not null)
         {
-            args = [.. args, "--launch-profile", context.Options.LaunchProfile];
+            args = [.. args, "--configuration", options.Configuration];
         }
-        else if (context.Options.NoLaunchProfile ?? false)
+
+        return args;
+    }
+
+    // `dotnet run [--file|--project] <path> --no-build [--configuration <c>] [launch-profile options] -- [app args]`.
+    public static IReadOnlyList<string> CreateDotNetRunArguments(SailRunOptions options, ISourceProject project)
+    {
+        string[] args = project.IsFileBased
+            ? ["--file", project.ProjectPath]
+            : ["--project", project.ProjectPath];
+
+        args = [.. args, "--no-build"];
+
+        if (options.Configuration is not null)
+        {
+            args = [.. args, "--configuration", options.Configuration];
+        }
+
+        if (options.LaunchProfile is not null)
+        {
+            args = [.. args, "--launch-profile", options.LaunchProfile];
+        }
+        else if (options.NoLaunchProfile ?? false)
         {
             args = [.. args, "--no-launch-profile"];
         }
 
-        if (context.Options.Arguments is not null)
+        if (options.Arguments is { Length: > 0 })
         {
-            args = [.. args, .. context.Options.Arguments];
+            // Application arguments must follow an explicit `--` separator so `dotnet run`
+            // does not try to interpret them as its own options.
+            args = [.. args, "--", .. options.Arguments];
         }
 
-        return args.ToArray();
+        return args;
     }
 }
 
@@ -101,6 +121,14 @@ public class DotNetPublishAndExecRunner : IProjectRunner
 
     public async Task<int> RunAsync(BootstrapContext context, ISourceProject project)
     {
+        if (project.IsFileBased)
+        {
+            // File-based applications (native `dotnet run --file`) have no publishable
+            // entry assembly path in the shape this runner expects. Fail fast instead of
+            // silently converting the project or forcing `PublishAot=false`.
+            throw new SailExecutionException($"'{project.DisplayName}' does not support the '{string.Join("', '", Aliases)}' runner. Use the 'run' runner for file-based applications instead.");
+        }
+
         string[] publishArgs = [project.ProjectPath, "--output", context.Workspace.ArtifactsDirectory];
 
         if (context.Options.Configuration is not null)
