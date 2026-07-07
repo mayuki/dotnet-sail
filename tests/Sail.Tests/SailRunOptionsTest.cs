@@ -1,4 +1,4 @@
-﻿namespace Sail.Tests;
+namespace Sail.Tests;
 
 public class SailRunOptionsTest
 {
@@ -19,7 +19,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal(SailRunOptions.Default.Runner, options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Source, options.Source);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
@@ -43,7 +42,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal("publish", options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
 
@@ -66,7 +64,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal(SailRunOptions.Default.Runner, options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
 
@@ -89,7 +86,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal(SailRunOptions.Default.Runner, options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
 
@@ -112,7 +108,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal(SailRunOptions.Default.Runner, options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
 
@@ -135,7 +130,6 @@ public class SailRunOptionsTest
         Assert.Equal(SailRunOptions.Default.ExecName, options.ExecName);
         Assert.Equal(SailRunOptions.Default.LaunchProfile, options.LaunchProfile);
         Assert.Equal("runner_test", options.Runner);
-        Assert.Equal(SailRunOptions.Default.Sdk, options.Sdk);
         Assert.Equal(SailRunOptions.Default.Verbosity, options.Verbosity);
     }
 
@@ -278,38 +272,6 @@ public class SailRunOptionsTest
         // Assert
         Assert.NotEqual(SailRunOptions.Default, options);
         Assert.Equal(optionValue, options.ExecName);
-    }
-
-    [Theory]
-    [InlineData("--sdk", "____.NET.Sdk")]
-    public void UpdateFromCommandLineArgument_Options_Sdk(string optionName, string optionValue)
-    {
-        // Arrange
-        string[] args = [optionName, optionValue];
-        var options = SailRunOptions.Default;
-
-        // Act
-        options = SailRunOptions.UpdateFromCommandLineArguments(options, args);
-
-        // Assert
-        Assert.NotEqual(SailRunOptions.Default, options);
-        Assert.Equal(optionValue, options.Sdk);
-    }
-
-    [Theory]
-    [InlineData("--target-framework", "net7.0-windows")]
-    public void UpdateFromCommandLineArgument_Options_TargetFramework(string optionName, string optionValue)
-    {
-        // Arrange
-        string[] args = [optionName, optionValue];
-        var options = SailRunOptions.Default;
-
-        // Act
-        options = SailRunOptions.UpdateFromCommandLineArguments(options, args);
-
-        // Assert
-        Assert.NotEqual(SailRunOptions.Default, options);
-        Assert.Equal(optionValue, options.TargetFramework);
     }
 
     [Theory]

@@ -18,7 +18,9 @@ public static class ProjectResolver
                 switch (Path.GetExtension(targetFullPath))
                 {
                     case ".cs":
-                        candidates.Add(new SingleCSharpSourceProject(targetFullPath));
+                        // An explicitly targeted .cs file always runs as a native file-based
+                        // application, even if sibling files or a .csproj exist in the same directory.
+                        candidates.Add(new FileBasedCSharpSourceProject(targetFullPath));
                         break;
                     case ".csproj":
                         candidates.Add(new CSharpProjectProject(targetFullPath));
@@ -51,19 +53,17 @@ public static class ProjectResolver
             if (csProjs.Length == 0)
             {
                 // *.cs
-                var sourceProjects = Directory.EnumerateFiles(baseDir, "*.cs")
-                    .Select(x => new SingleCSharpSourceProject(x))
-                    .ToArray();
-
-                // Program.cs
-                var programCsProject = sourceProjects.SingleOrDefault(x => string.Equals(Path.GetFileName(x.SourcePath), "Program.cs", StringComparison.OrdinalIgnoreCase));
-                if (programCsProject is not null)
+                var sourceFiles = Directory.EnumerateFiles(baseDir, "*.cs").ToArray();
+                if (sourceFiles.Length == 1)
                 {
-                    candidates.Add(programCsProject);
+                    // A single loose .cs file runs as a native file-based application.
+                    candidates.Add(new FileBasedCSharpSourceProject(sourceFiles[0]));
                 }
-                else
+                else if (sourceFiles.Length > 1)
                 {
-                    candidates.AddRange(sourceProjects);
+                    // Multiple loose .cs files (with or without Program.cs) are compiled
+                    // together via a generated compatibility project.
+                    candidates.Add(new GeneratedCSharpProjectProject(baseDir));
                 }
             }
         }

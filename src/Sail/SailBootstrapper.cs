@@ -71,10 +71,6 @@ internal static class SailBootstrapper
                --exec-name <value>            The name of the entrypoint assembly.
                                               This option is available with 'dotnet publish' and 'dotnet exec' ({nameof(DotNetPublishAndExecRunner)}).
                                               Environment variable `DOTNET_SAIL_EXEC_NAME`.
-               --sdk <value>                  The SDK to run for single C# source project. The default is '{SailRunOptions.Default.Sdk}'.
-                                              Environment variable `DOTNET_SAIL_SDK`.
-               --target-framework <value>     The target framework to run for single C# source project. The default is '{SailRunOptions.Default.TargetFramework}'.
-                                              Environment variable `DOTNET_SAIL_TARGET_FRAMEWORK`.
 
              Example:
                From Gist:

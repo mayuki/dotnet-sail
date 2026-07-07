@@ -20,10 +20,6 @@ public record SailRunOptions(
     string[]? Arguments,
     // DOTNET_SAIL_ENV_*
     IReadOnlyDictionary<string, string> EnvironmentVariables,
-    // DOTNET_SAIL_SDK
-    string? Sdk,
-    // DOTNET_SAIL_TARGET_FRAMEWORK
-    string? TargetFramework,
     // DOTNET_SAIL_VERBOSITY
     LogLevel Verbosity
 )
@@ -39,8 +35,6 @@ public record SailRunOptions(
         NoLaunchProfile: null,
         Arguments: null,
         EnvironmentVariables: new Dictionary<string, string>(),
-        Sdk: "Microsoft.NET.Sdk",
-        TargetFramework: "net8.0",
         Verbosity: LogLevel.Information
     );
 
@@ -62,8 +56,6 @@ public record SailRunOptions(
             LaunchProfile = dictionary.GetValueOrDefault($"{Prefix}LAUNCH_PROFILE", options.LaunchProfile)!,
             NoLaunchProfile = ParseBoolean(dictionary.GetValueOrDefault($"{Prefix}NO_LAUNCH_PROFILE")) ?? options.NoLaunchProfile,
             Arguments = dictionary.GetValueOrDefault($"{Prefix}ARGUMENTS")?.Split(' ') ?? options.Arguments,
-            Sdk = dictionary.GetValueOrDefault($"{Prefix}SDK", options.Sdk),
-            TargetFramework = dictionary.GetValueOrDefault($"{Prefix}TARGET_FRAMEWORK", options.TargetFramework),
             Verbosity = ParseLogLevel(dictionary.GetValueOrDefault($"{Prefix}VERBOSITY")) ?? options.Verbosity,
         };
 
@@ -127,12 +119,6 @@ public record SailRunOptions(
                             break;
                         case "--exec-name":
                             options = options with { ExecName = optionValue };
-                            break;
-                        case "--sdk":
-                            options = options with { Sdk = optionValue };
-                            break;
-                        case "--target-framework":
-                            options = options with { TargetFramework = optionValue };
                             break;
                     }
 
