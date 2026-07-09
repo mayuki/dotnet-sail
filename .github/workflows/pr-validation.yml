@@ -40,7 +40,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=pr-${{ matrix.flavor }}-amd64
 
       - name: Smoke test ${{ matrix.flavor }} image (amd64)
-        run: ./tests/smoke/run-smoke-tests.sh sail-pr:${{ matrix.flavor }}-amd64 ${{ matrix.flavor }}
+        run: bash ./tests/smoke/run-smoke-tests.sh sail-pr:${{ matrix.flavor }}-amd64 ${{ matrix.flavor }}
 
   # Every PR: arm64 build and smoke test for net10 only.
   build-arm64-net10:
@@ -63,4 +63,4 @@ jobs:
           cache-to: type=gha,mode=max,scope=pr-net10-arm64
 
       - name: Smoke test net10 image (arm64)
-        run: ./tests/smoke/run-smoke-tests.sh sail-pr:net10-arm64 net10
+        run: bash ./tests/smoke/run-smoke-tests.sh sail-pr:net10-arm64 net10

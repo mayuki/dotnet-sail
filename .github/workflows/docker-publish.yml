@@ -81,7 +81,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.flavor }}-${{ matrix.arch }}
 
       - name: Smoke test ${{ matrix.flavor }} image (${{ matrix.arch }})
-        run: ./tests/smoke/run-smoke-tests.sh sail-build:${{ matrix.flavor }}-${{ matrix.arch }} ${{ matrix.flavor }}
+        run: bash ./tests/smoke/run-smoke-tests.sh sail-build:${{ matrix.flavor }}-${{ matrix.arch }} ${{ matrix.flavor }}
 
       # Only reachable once the smoke test above has passed, so a broken image
       # can never become eligible for the final manifest.
