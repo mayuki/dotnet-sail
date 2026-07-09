@@ -82,7 +82,12 @@ public record SailRunOptions(
             {
                 if (args[i] == "--help") continue; // Skip `--help`
 
-                if (args[i].StartsWith('-') && args.Count >= i + 2)
+                if (args[i] == "--no-launch-profile")
+                {
+                    // Standalone (value-less) boolean flag; may appear as the last argument.
+                    options = options with { NoLaunchProfile = true };
+                }
+                else if (args[i].StartsWith('-') && args.Count >= i + 2)
                 {
                     // Treat as Sail's options until the source argument is encountered.
                     var optionName = args[i];
@@ -105,9 +110,6 @@ public record SailRunOptions(
                         case "-lp":
                         case "--launch-profile":
                             options = options with { LaunchProfile = optionValue };
-                            break;
-                        case "--no-launch-profile":
-                            options = options with { NoLaunchProfile = true };
                             break;
                         case "-s":
                         case "--source":
