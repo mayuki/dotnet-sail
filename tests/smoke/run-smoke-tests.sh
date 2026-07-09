@@ -182,16 +182,15 @@ run_target_framework_probe() {
 	local output
 
 	mkdir -p "${output_directory}"
-	docker run --rm --entrypoint dotnet \
+	docker run --rm --entrypoint /bin/sh \
 		--volume "${FIXTURES_DIRECTORY}/framework-dependent/net${target_major}:/src:ro" \
 		--volume "${output_directory}:/out" \
-		--workdir /src \
 		"mcr.microsoft.com/dotnet/sdk:${target_major}.0-noble" \
-		build --configuration Release --output /out \
+		-c 'cp -R /src/. /out/source && dotnet build /out/source/RuntimeProbe.csproj --configuration Release --output /out/publish && chmod -R a+rwX /out' \
 		|| fail "net${target_major}.0 runtime probe did not build"
 
 	output="$(docker run --rm --entrypoint dotnet \
-		--volume "${output_directory}:/probe:ro" \
+		--volume "${output_directory}/publish:/probe:ro" \
 		"${IMAGE}" /probe/RuntimeProbe.dll)" \
 		|| fail "net${target_major}.0 runtime probe did not run"
 	echo "--- net${target_major}.0 runtime probe output ---"
