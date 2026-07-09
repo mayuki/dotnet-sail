@@ -5,41 +5,15 @@ on:
     branches:
       - main
     paths-ignore:
-      - '.github/**'
       - '**.md'
       - 'docs/**'
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
-  # https://docs.github.com/ja/actions/publishing-packages/publishing-docker-images
-  Build-and-push:
-    runs-on: ubuntu-latest
+  publish:
+    uses: ./.github/workflows/docker-publish.yml
+    with:
+      formal: false
+    secrets: inherit
     permissions:
       contents: read
       packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./src/Sail
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}

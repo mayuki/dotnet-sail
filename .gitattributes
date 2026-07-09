@@ -4,6 +4,12 @@
 * text=auto
 
 ###############################################################################
+# Shell scripts must always use LF line endings so they execute correctly
+# inside Linux containers/runners even when checked out on Windows.
+###############################################################################
+*.sh text eol=lf
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by
