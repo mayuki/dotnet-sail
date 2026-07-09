@@ -1,0 +1,203 @@
+name: Docker publish
+
+# Reusable workflow that builds all 4 image flavors (net10, net8, net9, all) for
+# both linux/amd64 and linux/arm64 on native runners (no QEMU), smoke-tests each
+# per-architecture image before it becomes eligible for publication, and then
+# assembles + publishes multi-platform manifest lists.
+#
+# formal: false -> development aliases (main, main-net10.0, main-net8.0,
+#                  main-net9.0, main-all), published to GHCR only.
+# formal: true  -> formal aliases (latest, net10.0, net8.0, net9.0, all),
+#                  published to both GHCR and Docker Hub.
+
+on:
+  workflow_call:
+    inputs:
+      formal:
+        description: >-
+          When true, publish formal tags to GHCR and Docker Hub. When false,
+          publish development tags to GHCR only.
+        required: true
+        type: boolean
+
+env:
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  DOCKERHUB_IMAGE: ${{ github.repository }}
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet test tests/Sail.Tests/Sail.Tests.csproj --configuration Release
+
+  # Build every flavor for every architecture on a native runner, smoke-test the
+  # resulting image, and only then push it (by digest, untagged) to GHCR so it
+  # can be assembled into a manifest list by the `manifest` job below.
+  build:
+    needs: unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [net10, net8, net9, all]
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+            platform: linux/amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.flavor }} image (${{ matrix.arch }}) for smoke testing
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/Sail
+          target: ${{ matrix.flavor }}
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: sail-build:${{ matrix.flavor }}-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.flavor }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.flavor }}-${{ matrix.arch }}
+
+      - name: Smoke test ${{ matrix.flavor }} image (${{ matrix.arch }})
+        run: ./tests/smoke/run-smoke-tests.sh sail-build:${{ matrix.flavor }}-${{ matrix.arch }} ${{ matrix.flavor }}
+
+      # Only reachable once the smoke test above has passed, so a broken image
+      # can never become eligible for the final manifest.
+      - name: Push ${{ matrix.flavor }} image (${{ matrix.arch }}) by digest
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/Sail
+          target: ${{ matrix.flavor }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=${{ env.GHCR_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.flavor }}-${{ matrix.arch }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests/${{ matrix.flavor }}
+          digest="${{ steps.push.outputs.digest }}"
+          touch "/tmp/digests/${{ matrix.flavor }}/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.flavor }}-${{ matrix.arch }}
+          path: /tmp/digests/${{ matrix.flavor }}/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Assemble the amd64+arm64 digests for each flavor into a manifest list and
+  # publish it under the appropriate floating tags.
+  manifest:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [net10, net8, net9, all]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: inputs.formal
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-${{ matrix.flavor }}-*
+          merge-multiple: true
+
+      - name: Create and push manifest list
+        working-directory: /tmp/digests
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          FORMAL: ${{ inputs.formal }}
+        run: |
+          set -euo pipefail
+
+          case "${FLAVOR}" in
+            net10) dev_names="main main-net10.0"; formal_names="latest net10.0" ;;
+            net8)  dev_names="main-net8.0";        formal_names="net8.0" ;;
+            net9)  dev_names="main-net9.0";        formal_names="net9.0" ;;
+            all)   dev_names="main-all";           formal_names="all" ;;
+            *) echo "Unknown flavor: ${FLAVOR}" >&2; exit 1 ;;
+          esac
+
+          if [ "${FORMAL}" = "true" ]; then
+            names="${formal_names}"
+          else
+            names="${dev_names}"
+          fi
+
+          tag_args=()
+          for name in ${names}; do
+            tag_args+=(--tag "${GHCR_IMAGE}:${name}")
+            if [ "${FORMAL}" = "true" ]; then
+              tag_args+=(--tag "${DOCKERHUB_IMAGE}:${name}")
+            fi
+          done
+
+          sources=()
+          for digest_file in *; do
+            sources+=("${GHCR_IMAGE}@sha256:${digest_file}")
+          done
+          if [ "${#sources[@]}" -lt 2 ]; then
+            echo "Expected digests for both amd64 and arm64, found: ${sources[*]:-(none)}" >&2
+            exit 1
+          fi
+
+          echo "Creating manifest list for flavor '${FLAVOR}' with tags: ${names}"
+          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
+
+          first_name="$(echo ${names} | awk '{print $1}')"
+          echo "VERIFY_TAG=${GHCR_IMAGE}:${first_name}" >> "${GITHUB_ENV}"
+
+      - name: Verify manifest contains both linux/amd64 and linux/arm64
+        run: |
+          set -euo pipefail
+          raw="$(docker buildx imagetools inspect "${VERIFY_TAG}" --raw)"
+          amd64_count="$(echo "${raw}" | jq '[.manifests[]? | select(.platform.architecture=="amd64" and .platform.os=="linux")] | length')"
+          arm64_count="$(echo "${raw}" | jq '[.manifests[]? | select(.platform.architecture=="arm64" and .platform.os=="linux")] | length')"
+          echo "amd64 manifests: ${amd64_count}, arm64 manifests: ${arm64_count}"
+          if [ "${amd64_count}" -lt 1 ] || [ "${arm64_count}" -lt 1 ]; then
+            echo "Manifest '${VERIFY_TAG}' is missing linux/amd64 or linux/arm64" >&2
+            exit 1
+          fi
