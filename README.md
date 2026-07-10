@@ -27,12 +27,46 @@ The container images are available from the following container registries:
 - mayuki/dotnet-sail (Docker Hub)
 - ghcr.io/mayuki/dotnet-sail (GitHub Packages Container Registry)
 
+Formal releases are published to both registries with these multi-platform tags:
+
+|Tag|Installed SDK|Installed runtimes (`Microsoft.NETCore.App` and `Microsoft.AspNetCore.App`)|
+|--|--|--|
+|`latest`, `net10.0`|.NET 10 only|.NET 10|
+|`net8.0`|.NET 10 only|.NET 8, .NET 10|
+|`net9.0`|.NET 10 only|.NET 9, .NET 10|
+|`all`|.NET 10 only|.NET 8, .NET 9, .NET 10|
+
+`latest` is equivalent to `net10.0`. All tags support `linux/amd64` and `linux/arm64`.
+Development tags (`main`, `main-net10.0`, `main-net8.0`, `main-net9.0`, and
+`main-all`) are published to GHCR only.
+
+> [!WARNING]
+> The `net8.0` and `net9.0` tags remain available after those .NET versions reach
+> end of support, but—under the current official policy—stop receiving upstream
+> security fixes on 2026-11-10.
+
+All images set `DOTNET_ROLL_FORWARD=Major`: an exact installed requested major is
+selected when present; otherwise .NET rolls forward to an installed major. Old
+runtime tags provide old runtimes, not old SDKs. `global.json` is respected, so a
+project that pins an unavailable old SDK fails normally.
+
 ### Run from Gist
 ```
 docker run --rm -it mayuki/dotnet-sail https://gist.github.com/mayuki/d052d7457a63f25763ce8ecf04b1d0fc
 ```
 
-If the Gist contains only one C# file, it automatically generates a C# project and starts it. If the Gist includes a .csproj file, it uses that to start the project.
+A single loose C# file runs as a native .NET file-based application. Use standard
+file directives when needed:
+
+```csharp
+#:sdk Microsoft.NET.Sdk.Web
+#:property TargetFramework=net8.0
+```
+
+For a source directory, an existing `.csproj` takes priority. Multiple loose `.cs`
+files without a project are compiled together through a generated compatibility
+project. Explicitly selecting a `.cs` file runs that file as a native file-based
+application even when sibling source files or a `.csproj` exist.
 
 ### Run from GitHub
 ```
@@ -42,7 +76,7 @@ docker run --rm -it -p 8080:8080 -e mayuki/dotnet-sail https://github.com/mayuki
 #### Allowed URL forms
 - `https://github.com/<org>/<repo>`
 - `https://github.com/<org>/<repo>/tree/<branch-or-hash>/<path-to-source-directory>`
-- `https://github.com/<org>/<repo>/blob/<branch-or-hash>/<path-to-source-directory>/<target>.csproj`
+- `https://github.com/<org>/<repo>/blob/<branch-or-hash>/<path-to-source-directory>/<target>.csproj` or `<target>.cs`
 
 
 ### Run from Git
@@ -88,7 +122,11 @@ Also, at this point, there is no provided method for configuring authentication 
 |DOTNET_SAIL_ENV_*|`-e`, `--env`|The environment variables for the application to be run.|
 
 > [!NOTE]
-> `--sdk`/`DOTNET_SAIL_SDK` and `--target-framework`/`DOTNET_SAIL_TARGET_FRAMEWORK` have been removed. A single `.cs` file now runs as a native .NET file-based application; use standard source directives instead (e.g. `#:sdk Microsoft.NET.Sdk.Web`, `#:property TargetFramework=net8.0`).
+> `--sdk`/`DOTNET_SAIL_SDK` and `--target-framework`/`DOTNET_SAIL_TARGET_FRAMEWORK`
+> have been removed. Use standard source directives for a native file-based
+> application instead (for example, `#:sdk Microsoft.NET.Sdk.Web` and
+> `#:property TargetFramework=net8.0`). Native file-based applications are supported
+> only by the default `run` runner; the `publish` runner intentionally fails for them.
 
 ```
 docker run --rm -it mayuki/dotnet-sail -e DOTNET_ENVIRONMENT=Production -r publish https://example.com/repo.git arg1 arg2
