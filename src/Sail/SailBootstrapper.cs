@@ -20,7 +20,7 @@ internal static class SailBootstrapper
             }
 
             var logger = new Logger(options.Verbosity);
-            logger.Information($"Source: {options.Source}");
+            logger.Trace($"Source: {options.Source}");
 
             using var workspace = CreateWorkspace(logger);
             var fetchResult = await FetchSourceAsync(options.Source, workspace, logger);
@@ -85,7 +85,7 @@ internal static class SailBootstrapper
     private static IWorkspace CreateWorkspace(Logger logger)
     {
         var workspace = new LocalTemporaryWorkspace();
-        logger.Information($"Workspace: {workspace.RootDirectory}");
+        logger.Trace($"Workspace: {workspace.RootDirectory}");
         logger.Trace($"SourceDirectory is '{workspace.SourceDirectory}'");
         logger.Trace($"ArtifactsDirectory is '{workspace.ArtifactsDirectory}'");
         Environment.CurrentDirectory = workspace.RootDirectory;
@@ -102,7 +102,7 @@ internal static class SailBootstrapper
             throw new SailExecutionException("No source provider matched.");
         }
 
-        logger.Information($"Using source provider is '{sourceProvider.GetType().Name}'.");
+        logger.Trace($"Using source provider is '{sourceProvider.GetType().Name}'.");
         var fetchResult = await sourceProvider.FetchAndExtractToWorkspaceAsync(sourceProviderContext);
         if (fetchResult.TargetPath is { } targetPath && targetPath.StartsWith("/"))
         {
@@ -137,7 +137,7 @@ internal static class SailBootstrapper
             throw new SailExecutionException($"Specified project runner '{context.Options.Runner}' is not found.");
         }
 
-        context.Logger.Information($"Project runner is '{runner.GetType().Name}'.");
+        context.Logger.Trace($"Project runner is '{runner.GetType().Name}'.");
 
         var exitCode = await runner.RunAsync(context, project);
         context.Logger.Information($"The program has exited with exit code '{exitCode}'.");
