@@ -67,11 +67,16 @@ public class DotNetRunRunner : IProjectRunner
         }
     }
 
-    // `dotnet build <path-to-project-or-file> [--configuration <c>]`. The same shape works for
-    // a conventional/generated project (.csproj) and a native file-based application (.cs).
+    // `dotnet build <path-to-project-or-file> [--configuration <c>]`. File-based applications
+    // require PublishAot=false to avoid their NativeAOT default during restore.
     public static IReadOnlyList<string> CreateDotNetBuildArguments(SailRunOptions options, ISourceProject project)
     {
         string[] args = [project.ProjectPath];
+
+        if (project.IsFileBased)
+        {
+            args = [.. args, "--property:PublishAot=false"];
+        }
 
         if (options.Configuration is not null)
         {
