@@ -39,13 +39,13 @@ public class ProjectRunnerTest
     }
 
     [Fact]
-    public void BuildArguments_FileBased_SameShapeAsProject()
+    public void BuildArguments_FileBased_DisablesNativeAot()
     {
         var project = new FileBasedCSharpSourceProject("Program.cs");
 
         var args = DotNetRunRunner.CreateDotNetBuildArguments(CreateOptions(configuration: "Release"), project);
 
-        Assert.Equal(["Program.cs", "--configuration", "Release"], args);
+        Assert.Equal(["Program.cs", "--property:PublishAot=false", "--configuration", "Release"], args);
     }
 
     [Fact]
